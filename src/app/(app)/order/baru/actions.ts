@@ -6,21 +6,55 @@ import { normalisasiHp } from "@/lib/format";
 
 export type HasilSimpan = { error: string } | null;
 
+export type PelangganKetemu = {
+  nama: string;
+  jumlahOrder: number;
+  terakhirTanggal: string | null;
+  terakhirTotal: number | null;
+};
+
 // Dipanggil dari form saat nomor HP selesai diketik.
+//
+// Riwayat singkatnya ikut diambil karena itu yang membedakan "nomor ini
+// terdaftar" dari "saya kenal pelanggan ini": kasir yang melihat 12 order dan
+// kunjungan terakhir minggu lalu tahu ia sedang melayani langganan, bukan
+// sekadar baris yang kebetulan cocok. Satu kueri tambahan, hanya jalan saat
+// nomornya benar-benar ketemu.
 export async function cariPelanggan(
   noHp: string
-): Promise<{ nama: string } | null> {
+): Promise<PelangganKetemu | null> {
   const hp = normalisasiHp(noHp);
   if (hp.length < 10) return null;
 
   const { db } = await getProfil();
   const { data } = await db
     .from("pelanggan")
-    .select("nama")
+    .select("id, nama")
     .eq("no_hp", hp)
     .maybeSingle();
 
-  return data ?? null;
+  if (!data) return null;
+
+  const [{ count }, { data: terakhir }] = await Promise.all([
+    db
+      .from("pesanan")
+      .select("id", { count: "exact", head: true })
+      .eq("pelanggan_id", data.id),
+    db
+      .from("pesanan")
+      .select("total, created_at")
+      .eq("pelanggan_id", data.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  return {
+    nama: data.nama,
+    jumlahOrder: count ?? 0,
+    terakhirTanggal: terakhir?.created_at ?? null,
+    terakhirTotal: terakhir?.total ?? null,
+  };
 }
 
 // Kode order: tanggal Jakarta + nomor urut hari itu, mis. 2707-03.
