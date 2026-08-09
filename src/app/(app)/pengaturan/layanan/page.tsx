@@ -1,30 +1,23 @@
 import Link from "next/link";
 import FormAdmin from "@/components/forms/FormAdmin";
+import FormLayanan from "@/components/forms/FormLayanan";
 import { gayaInput, gayaLabel } from "@/components/forms/gaya";
 import { getProfil } from "@/lib/profil";
-import { simpanLayanan, tambahLayanan } from "../actions";
+import { tambahLayanan } from "../actions";
+import type { Layanan } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-type Layanan = {
-  id: string;
-  nama: string;
-  satuan: string;
-  harga: number;
-  aktif: boolean;
-};
 
 export default async function PengaturanLayanan() {
   const { db, laundry } = await getProfil();
 
   const { data } = await db
     .from("layanan")
-    .select("id, nama, satuan, harga, aktif")
+    .select("id, laundry_id, nama, satuan, harga, aktif")
     .eq("laundry_id", laundry.id)
     .order("created_at");
 
   const layanan = (data ?? []) as Layanan[];
-  const adaHargaNol = layanan.some((l) => l.aktif && l.harga === 0);
 
   return (
     <div className="px-4 md:px-0">
@@ -41,98 +34,31 @@ export default async function PengaturanLayanan() {
         memakai harga saat order itu dibuat.
       </p>
 
-      {adaHargaNol && (
-        <p
-          role="status"
-          className="mt-5 border-l-[3px] border-amber-700 bg-amber-50 px-3 py-2.5 text-sm leading-relaxed text-amber-950"
-        >
-          Ada layanan aktif yang harganya masih 0. Order yang memakainya akan
-          bertotal nol.
-        </p>
+      {/* Peringatan harga nol dan tombol simpan ikut pindah ke dalam
+          FormLayanan: keduanya harus membalas ketikan yang sedang berjalan,
+          bukan keadaan saat halaman terakhir dimuat dari server. */}
+      {layanan.length ? (
+        <FormLayanan awal={layanan} />
+      ) : (
+        <div className="mt-6 border border-dashed border-garis bg-white px-5 py-7 text-center">
+          <span
+            className="mx-auto mb-4 block h-px w-7 bg-aksen"
+            aria-hidden="true"
+          />
+          <p className="text-base font-semibold">Belum ada layanan</p>
+          <p className="mt-2 text-sm leading-relaxed text-tinta-2">
+            Layar catat order masih kosong sampai ada satu layanan aktif di
+            sini. Tambahkan lewat kotak di bawah.
+          </p>
+        </div>
       )}
 
-      <section className="mt-7">
-        {!layanan.length ? (
-          <p className="py-6 text-sm leading-relaxed text-tinta-3">
-            Belum ada layanan. Tambahkan minimal satu supaya order bisa dicatat.
-          </p>
-        ) : (
-          <FormAdmin
-            aksi={simpanLayanan}
-            saatMenunggu="Menyimpan..."
-            tombol="Simpan perubahan"
-          >
-            <div className="space-y-4">
-              {layanan.map((l) => (
-                <div key={l.id} className="border border-garis bg-white p-4">
-                  <input type="hidden" name="id" value={l.id} />
-
-                  <label htmlFor={`nama-${l.id}`} className={gayaLabel}>
-                    Nama layanan
-                  </label>
-                  <input
-                    id={`nama-${l.id}`}
-                    name={`nama-${l.id}`}
-                    defaultValue={l.nama}
-                    required
-                    minLength={2}
-                    className={gayaInput}
-                  />
-
-                  <div className="mt-3 flex gap-3">
-                    <div className="min-w-0 flex-1">
-                      <label htmlFor={`harga-${l.id}`} className={gayaLabel}>
-                        Harga
-                      </label>
-                      <input
-                        id={`harga-${l.id}`}
-                        name={`harga-${l.id}`}
-                        type="number"
-                        inputMode="numeric"
-                        min={0}
-                        step={500}
-                        defaultValue={l.harga}
-                        required
-                        className={`${gayaInput} angka font-mono`}
-                      />
-                    </div>
-                    <div className="w-28 shrink-0">
-                      <label htmlFor={`satuan-${l.id}`} className={gayaLabel}>
-                        Satuan
-                      </label>
-                      <select
-                        id={`satuan-${l.id}`}
-                        name={`satuan-${l.id}`}
-                        defaultValue={l.satuan}
-                        className={gayaInput}
-                      >
-                        <option value="kg">kg</option>
-                        <option value="pcs">pcs</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <label className="mt-4 flex items-center gap-2.5 text-sm">
-                    <input
-                      type="checkbox"
-                      name={`aktif-${l.id}`}
-                      defaultChecked={l.aktif}
-                      className="h-4 w-4 accent-aksen"
-                    />
-                    Tampilkan saat mencatat order
-                  </label>
-                </div>
-              ))}
-            </div>
-          </FormAdmin>
-        )}
-      </section>
-
-      <section className="mt-9">
-        <h2 className="mb-4 border-b border-garis pb-2 font-mono text-[11px] uppercase tracking-[0.22em] text-tinta-2">
+      <section className="mt-9 border-t border-garis pt-6">
+        <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-tinta-3">
           Tambah layanan
         </h2>
-        <div className="border border-garis bg-white p-5">
+
+        <div className="mt-3 border border-garis bg-white p-4">
           <FormAdmin
             aksi={tambahLayanan}
             saatMenunggu="Menambah..."
@@ -148,27 +74,38 @@ export default async function PengaturanLayanan() {
                 required
                 minLength={2}
                 autoComplete="off"
+                placeholder="mis. Cuci selimut"
                 className={gayaInput}
               />
             </div>
-            <div className="flex gap-3">
+
+            <div className="flex gap-2">
               <div className="min-w-0 flex-1">
                 <label htmlFor="harga-baru" className={gayaLabel}>
                   Harga
                 </label>
-                <input
-                  id="harga-baru"
-                  name="harga"
-                  type="number"
-                  inputMode="numeric"
-                  min={0}
-                  step={500}
-                  defaultValue={0}
-                  required
-                  className={`${gayaInput} angka font-mono`}
-                />
+                {/* "Rp" jadi bagian kotaknya, sama seperti di daftar di atas —
+                    kolom angka menolak "Rp7000", dan menaruhnya di label
+                    membuat orang mengetiknya lagi. */}
+                <div className="flex items-stretch border border-garis bg-white focus-within:ring-1 focus-within:ring-aksen">
+                  <span className="flex items-center pl-3 font-mono text-sm text-tinta-3">
+                    Rp
+                  </span>
+                  <input
+                    id="harga-baru"
+                    name="harga"
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    step={500}
+                    defaultValue={0}
+                    required
+                    className="angka h-12 w-full min-w-0 bg-transparent px-2.5 font-mono outline-none"
+                  />
+                </div>
               </div>
-              <div className="w-28 shrink-0">
+
+              <div className="w-24 shrink-0">
                 <label htmlFor="satuan-baru" className={gayaLabel}>
                   Satuan
                 </label>
@@ -176,7 +113,7 @@ export default async function PengaturanLayanan() {
                   id="satuan-baru"
                   name="satuan"
                   defaultValue="kg"
-                  className={gayaInput}
+                  className="h-12 w-full border border-garis bg-white px-2 outline-none focus:border-aksen"
                 >
                   <option value="kg">kg</option>
                   <option value="pcs">pcs</option>
@@ -185,6 +122,12 @@ export default async function PengaturanLayanan() {
             </div>
           </FormAdmin>
         </div>
+
+        <p className="mt-3 text-sm leading-relaxed text-tinta-2">
+          Layanan tidak bisa dihapus. Yang sudah tidak dipakai cukup dimatikan
+          lewat “Tampilkan saat mencatat order” — riwayat order lama tetap utuh
+          karena menyimpan salinan nama dan harganya sendiri.
+        </p>
       </section>
     </div>
   );
