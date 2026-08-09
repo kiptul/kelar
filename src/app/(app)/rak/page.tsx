@@ -72,24 +72,29 @@ export default async function HalamanRak() {
       {/* Status perangkat naik ke atas. Kalau ia mati, seluruh isi halaman di
           bawahnya adalah kabar basi — itu harus terbaca lebih dulu, bukan
           ditemukan setelah kasir terlanjur memercayai kotak-kotak slotnya. */}
+      {/* Peringatannya bertinta hitam, bukan warna baru: delapan warna di
+          brief sudah cukup, dan garis tegas lebih terbaca di layar HP murah
+          yang warnanya pucat daripada latar kuning muda. */}
       <section
         className={`flex items-baseline justify-between gap-3 border-b px-4 py-3 md:px-6 ${
-          hidup ? "border-garis" : "border-amber-700 bg-amber-50"
+          hidup ? "border-garis bg-aksen-muda" : "border-tinta bg-white"
         }`}
       >
         <span className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider">
           <span
-            className={`h-2 w-2 shrink-0 rounded-full ${
-              hidup ? "bg-aksen" : "bg-amber-700"
+            className={`h-2.5 w-2.5 shrink-0 rounded-full border ${
+              hidup ? "border-aksen bg-aksen" : "animate-pulse border-2 border-tinta"
             }`}
             aria-hidden="true"
           />
-          <span className={hidup ? "text-aksen" : "text-amber-900"}>
+          <span className={hidup ? "text-aksen" : "text-tinta"}>
             {hidup ? "Perangkat terhubung" : "Perangkat tidak melapor"}
           </span>
         </span>
-        <span className="angka font-mono text-[11px] text-tinta-3">
-          {kontak ? tanggalLengkap(kontak.toISOString()) : "Belum pernah melapor"}
+        <span className="angka font-mono text-[10px] uppercase tracking-[0.14em] text-tinta-3">
+          {kontak
+            ? `Kabar terakhir ${tanggalLengkap(kontak.toISOString())}`
+            : "Belum pernah melapor"}
         </span>
       </section>
 
@@ -101,13 +106,22 @@ export default async function HalamanRak() {
       )}
 
       {!slots.length ? (
-        <section className="px-4 py-6 md:px-6">
-          <p className="text-sm leading-relaxed text-tinta-2">
-            Belum ada slot yang didaftarkan. Rak fisik dipantau lewat sensor
-            kecil di tiap slot, lalu statusnya tampil di sini tanpa perlu
-            dicatat manual.
-          </p>
-          <div className="mt-5">
+        <section className="px-4 py-8 md:px-6">
+          <div className="border border-garis bg-white px-5 py-7 text-center">
+            <span
+              className="mx-auto mb-5 block h-px w-8 bg-aksen"
+              aria-hidden="true"
+            />
+            <p className="text-lg font-bold tracking-tight">
+              Pasang slot pertama
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-tinta-2">
+              Rak fisik dipantau lewat sensor kecil di tiap slot. Daftarkan
+              kodenya di sini — A1, A2, dan seterusnya — lalu statusnya tampil
+              sendiri tanpa perlu dicatat manual.
+            </p>
+          </div>
+          <div className="mt-4">
             <KelolaSlot slots={[]} />
           </div>
         </section>

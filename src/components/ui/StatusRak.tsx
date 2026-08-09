@@ -145,57 +145,96 @@ export default function StatusRak({
 
         {rak.map((huruf) => {
           const isiRak = slots.filter((s) => s.kode[0] === huruf);
+          const terisiRak = isiRak.filter((s) => s.terisi).length;
 
           return (
             <div key={huruf} className="mt-4 first:mt-3">
-              {rak.length > 1 && (
-                <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-tinta-3">
+              {/* Judul rak selalu tampil, bukan hanya saat raknya lebih dari
+                  satu. Rak yang tidak bernama membuat kasir menghitung sendiri
+                  slot mana milik rak mana begitu rak kedua dipasang, dan
+                  hitungan per rak itulah yang dia cari saat berdiri di depannya. */}
+              <div className="mb-2 flex items-baseline justify-between gap-3">
+                <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-tinta-3">
                   Rak {huruf}
                 </h3>
-              )}
+                <span className="angka font-mono text-[10px] uppercase tracking-[0.14em] text-tinta-3">
+                  {terisiRak}/{isiRak.length} terisi
+                </span>
+              </div>
 
               <ul className="grid grid-cols-3 gap-2">
                 {isiRak.map((s) => {
                   const lama = jamSejak(s.terisi_sejak, sekarang);
                   const mengendap = s.terisi && lama >= AMBANG_MENGENDAP_JAM;
+                  const tanpaOrder = s.terisi && !s.pesanan;
+                  // Dua-duanya perlu tindakan, jadi dua-duanya ditandai sama:
+                  // tinta tegas, bukan warna baru. Slot yang cuma "terisi dan
+                  // beres" tidak perlu berteriak.
+                  const perlu = mengendap || tanpaOrder;
 
                   return (
                     <li
                       key={s.kode}
-                      className={`border px-2 py-3 text-center transition-colors duration-300 ${
-                        mengendap
-                          ? "border-amber-700 bg-amber-50 text-amber-950"
-                          : s.terisi
-                            ? "border-aksen bg-aksen-muda text-aksen"
-                            : "border-dashed border-garis bg-white text-tinta-3"
+                      className={`border border-l-[3px] px-2.5 py-2.5 transition-colors duration-300 ${
+                        !s.terisi
+                          ? "border-garis border-l-garis bg-kertas-terang"
+                          : perlu
+                            ? "border-tinta border-l-tinta bg-white"
+                            : "border-aksen border-l-aksen bg-white"
                       }`}
                     >
-                      <p className="angka font-mono text-xl font-semibold leading-none">
-                        {s.kode}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className={`h-2 w-2 shrink-0 rounded-full border ${
+                            !s.terisi
+                              ? "border-tinta-3"
+                              : perlu
+                                ? "border-tinta bg-tinta"
+                                : "border-aksen bg-aksen"
+                          }`}
+                        />
+                        <span className="angka font-mono text-base font-semibold leading-none">
+                          {s.kode}
+                        </span>
+                      </div>
 
-                      <p className="mt-1.5 font-mono text-[10px] uppercase tracking-wider">
+                      <p
+                        className={`mt-1.5 font-mono text-[10px] uppercase tracking-[0.14em] ${
+                          !s.terisi
+                            ? "text-tinta-3"
+                            : perlu
+                              ? "text-tinta"
+                              : "text-aksen"
+                        }`}
+                      >
                         {s.terisi ? "Terisi" : "Kosong"}
                       </p>
 
                       {/* Kode order jauh lebih berguna daripada kata "Terisi" —
                           itu yang dicocokkan kasir dengan nota di tangannya. */}
-                      {s.pesanan && (
-                        <p className="angka mt-2 truncate font-mono text-[11px] font-semibold">
-                          {s.pesanan.kode}
-                        </p>
-                      )}
-                      {s.pesanan?.pelanggan && (
-                        <p className="mt-0.5 truncate text-[11px] leading-tight">
-                          {s.pesanan.pelanggan.nama}
+                      <p className="angka mt-1.5 truncate font-mono text-[11px] font-semibold">
+                        {s.terisi ? (s.pesanan?.kode ?? "Tanpa order") : "—"}
+                      </p>
+                      {s.terisi && (
+                        <p className="truncate text-[11px] leading-tight text-tinta-2">
+                          {s.pesanan?.pelanggan?.nama ?? "Belum ketahuan"}
                         </p>
                       )}
 
-                      {s.terisi && s.terisi_sejak && (
-                        <p className="angka mt-1.5 font-mono text-[10px] opacity-70">
-                          {lamaSejak(s.terisi_sejak, sekarang)}
-                        </p>
-                      )}
+                      <p
+                        className={`angka mt-2 border-t border-garis pt-1.5 font-mono text-[9px] uppercase tracking-[0.14em] ${
+                          mengendap ? "font-semibold text-tinta" : "text-tinta-3"
+                        }`}
+                      >
+                        {!s.terisi
+                          ? "Siap dipakai"
+                          : s.terisi_sejak
+                            ? mengendap
+                              ? `Menginap ${lamaSejak(s.terisi_sejak, sekarang)}`
+                              : lamaSejak(s.terisi_sejak, sekarang)
+                            : "—"}
+                      </p>
                     </li>
                   );
                 })}
@@ -207,39 +246,42 @@ export default function StatusRak({
 
       {perluTindakan.length > 0 && (
         <section className="border-b border-garis px-4 py-4 md:px-6">
-          <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-tinta-2">
-            Perlu dibereskan
-          </h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-tinta-2">
+              Perlu dibereskan
+            </h2>
+            <span className="angka font-mono text-[10px] uppercase tracking-[0.14em] text-tinta-3">
+              {perluTindakan.length} hal
+            </span>
+          </div>
 
           <ul className="mt-3 space-y-3">
             {perluTindakan.map((s) => {
               const mengendap = jamSejak(s.terisi_sejak, sekarang) >= AMBANG_MENGENDAP_JAM;
 
               return (
-                <li key={s.kode} className="border border-garis bg-white p-3.5">
+                <li key={s.kode} className="border border-tinta bg-white p-3.5">
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="angka font-mono text-sm font-semibold">
                       Slot {s.kode}
                     </span>
-                    {s.terisi_sejak && (
-                      <span
-                        className={`angka font-mono text-[11px] ${
-                          mengendap ? "text-amber-800" : "text-tinta-3"
-                        }`}
-                      >
-                        terisi {lamaSejak(s.terisi_sejak, sekarang)}
-                      </span>
-                    )}
+                    <span className="angka font-mono text-[10px] uppercase tracking-[0.14em] text-tinta-2">
+                      {mengendap ? "Menginap" : "Belum tertaut"}
+                    </span>
                   </div>
 
                   {s.pesanan ? (
                     <>
                       <p className="mt-1.5 text-sm leading-relaxed text-tinta-2">
-                        <span className="angka font-mono font-semibold">
-                          {s.pesanan.kode}
-                        </span>
-                        {s.pesanan.pelanggan && ` — ${s.pesanan.pelanggan.nama}`}
-                        {mengendap && " sudah lama menunggu di rak."}
+                        {s.pesanan.pelanggan?.nama ?? "Order ini"}{" "}
+                        <span className="angka font-mono">
+                          ({s.pesanan.kode})
+                        </span>{" "}
+                        sudah{" "}
+                        {s.terisi_sejak
+                          ? lamaSejak(s.terisi_sejak, sekarang)
+                          : "lama"}{" "}
+                        di rak. Hubungi pelanggannya supaya raknya lekas kosong.
                       </p>
 
                       <form action={lepasSlot} className="mt-3">
@@ -252,7 +294,12 @@ export default function StatusRak({
                   ) : (
                     <>
                       <p className="mt-1.5 text-sm leading-relaxed text-tinta-2">
-                        Ada cucian di slot ini, tapi belum ketahuan punya siapa.
+                        Sensor melihat ada cucian di {s.kode}
+                        {s.terisi_sejak && (
+                          <> sejak {lamaSejak(s.terisi_sejak, sekarang)} lalu</>
+                        )}
+                        , tapi belum tertaut ke order mana pun. Pilih ordernya
+                        supaya kasir berikutnya tidak menebak.
                       </p>
                       <TautkanSlot
                         kode={s.kode}
@@ -272,12 +319,27 @@ export default function StatusRak({
           seharusnya, itu daftar masalah. Tapi tanpa daftar ini, salah pilih
           order jadi tidak bisa dibatalkan: satu-satunya tombol Lepas ada di
           daftar yang tidak lagi memuatnya. */}
-      {tertaut.length > 0 && (
+      {slots.length > 0 && (
         <section className="border-b border-garis px-4 py-4 md:px-6">
-          <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-tinta-2">
-            Tautan slot
-          </h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.22em] text-tinta-2">
+              Tautan slot
+            </h2>
+            <span className="angka font-mono text-[10px] uppercase tracking-[0.14em] text-tinta-3">
+              {tertaut.length} tautan
+            </span>
+          </div>
 
+          {/* Bagiannya tetap tampil walau kosong. Judul yang hilang-timbul
+              membuat kasir mengira fiturnya tidak ada, lalu mencarinya di
+              tempat lain — sedangkan kalimat kosongnya justru bisa menyebutkan
+              dari mana tautan itu dibuat. */}
+          {!tertaut.length ? (
+            <p className="mt-3 text-sm leading-relaxed text-tinta-3">
+              Belum ada slot yang tertaut ke order. Tautkan dari daftar perlu
+              dibereskan di atas, atau dari layar detail order.
+            </p>
+          ) : (
           <ul className="mt-3 divide-y divide-garis border border-garis bg-white">
             {tertaut.map((s) => (
               <li
@@ -306,6 +368,7 @@ export default function StatusRak({
               </li>
             ))}
           </ul>
+          )}
         </section>
       )}
     </>
