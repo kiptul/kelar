@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { NOMOR_ADMIN } from "@/lib/kontak";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +11,6 @@ export const metadata: Metadata = {
   description:
     "Mengganti buku nota laundry, bukan seluruh cara kerjanya. Catat order secepat menulis tangan, pelanggan dikabari sendiri lewat WhatsApp.",
 };
-
-// Nomor WhatsApp yang menerima pertanyaan calon pengguna, format 62...
-// Selama masih kosong, tombolnya sengaja tidak dirender sama sekali: aturan
-// proyek ini melarang elemen yang tidak berfungsi, dan tautan wa.me ke nomor
-// kosong membuka halaman error WhatsApp — lebih buruk daripada tidak ada.
-const NOMOR_WA = "";
 
 const KENYATAAN = [
   { angka: "8", dari: "dari 14", teks: "laundry di Karawang masih mencatat di buku tulis" },
@@ -95,9 +90,9 @@ export default async function Beranda() {
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            {NOMOR_WA && (
+            {NOMOR_ADMIN && (
               <a
-                href={`https://wa.me/${NOMOR_WA}`}
+                href={`https://wa.me/${NOMOR_ADMIN}`}
                 className="flex min-h-[3rem] items-center justify-center bg-aksen px-6 text-sm font-medium text-white active:opacity-90"
               >
                 Tanya lewat WhatsApp
@@ -204,9 +199,9 @@ export default async function Beranda() {
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              {NOMOR_WA && (
+              {NOMOR_ADMIN && (
                 <a
-                  href={`https://wa.me/${NOMOR_WA}`}
+                  href={`https://wa.me/${NOMOR_ADMIN}`}
                   className="flex min-h-[3rem] items-center justify-center bg-tinta px-6 text-sm font-medium text-kertas active:bg-tinta-2"
                 >
                   Tanya lewat WhatsApp
