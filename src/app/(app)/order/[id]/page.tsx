@@ -266,7 +266,7 @@ export default async function DetailOrder({
                       {rupiah(i.subtotal)}
                     </span>
                   </div>
-                  <p className="angka mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-tinta-3">
+                  <p className="angka mt-0.5 font-mono text-[10px] tracking-[0.14em] text-tinta-3">
                     {i.qty} × {rupiah(i.harga_satuan)}
                   </p>
                 </li>

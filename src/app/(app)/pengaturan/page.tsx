@@ -28,7 +28,7 @@ export default async function Pengaturan() {
   const { laundry } = await getProfil();
 
   return (
-    <div className="px-4 md:px-0">
+    <div className="px-4 pt-5 md:px-0 md:pt-0">
       {/* Judul besar, sama seperti tiga halaman anaknya. Sebelumnya halaman ini
           sendirian memakai label mono kecil, jadi berpindah dari sini ke
           Layanan terasa seperti berpindah ke aplikasi lain. */}

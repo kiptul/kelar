@@ -114,13 +114,20 @@ export default function FormOrder({
   const tahap2 =
     status === "terdaftar" || (status === "baru" && namaKetik.trim().length > 0);
 
+  // Membaca nilai lama dari argumen setState, bukan dari `qty` di closure.
+  // Dua ketukan cepat pada + terjadi sebelum render pertama selesai, jadi
+  // keduanya membaca `qty` yang sama dan yang kedua menimpa yang pertama —
+  // dua ketukan cuma menambah setengah kilo. Terbukti di layar: 0,5 lalu 1,
+  // bukan 1,5.
   const ubahJumlah = (l: Layanan, arah: number) => {
-    const sekarang = keAngka(qty[l.id] ?? "");
-    const berikut = Math.max(
-      0,
-      Math.round((sekarang + arah * langkah(l.satuan)) * 10) / 10,
-    );
-    setQty({ ...qty, [l.id]: keTeks(berikut) });
+    setQty((lama) => {
+      const sekarang = keAngka(lama[l.id] ?? "");
+      const berikut = Math.max(
+        0,
+        Math.round((sekarang + arah * langkah(l.satuan)) * 10) / 10,
+      );
+      return { ...lama, [l.id]: keTeks(berikut) };
+    });
   };
 
   const gantiNomor = () => {
@@ -390,7 +397,10 @@ export default function FormOrder({
                           aria-label={`Jumlah ${l.nama}`}
                           value={qty[l.id] ?? ""}
                           onChange={(e) =>
-                            setQty({ ...qty, [l.id]: e.target.value })
+                            setQty((lama) => ({
+                              ...lama,
+                              [l.id]: e.target.value,
+                            }))
                           }
                           className="angka h-11 w-14 border-x border-garis bg-white text-center font-mono text-base outline-none focus:bg-aksen-muda"
                         />
@@ -466,7 +476,7 @@ export default function FormOrder({
                         {rupiah(Math.round(l.harga * jumlah))}
                       </span>
                     </div>
-                    <p className="angka mt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-tinta-3">
+                    <p className="angka mt-0.5 font-mono text-[10px] tracking-[0.14em] text-tinta-3">
                       {keTeks(jumlah)} {l.satuan} × {rupiah(l.harga)}
                     </p>
                   </li>

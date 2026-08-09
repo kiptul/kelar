@@ -229,7 +229,13 @@ export default async function Dashboard({
                     {p.pelanggan?.nama ?? "—"}
                   </p>
                   <div className="mt-0.5 flex items-baseline justify-between gap-3">
-                    <span className="angka font-mono text-xs text-tinta-3">
+                    {/* Dipotong, bukan dibungkus. Begitu penanda "Belum bayar"
+                        muncul di sisi kanan, sisa ruang di kiri tidak lagi
+                        cukup untuk nomor HP dan tanggal — dan tanpa truncate
+                        nomornya pecah jadi dua sampai tiga baris, membuat
+                        kartunya lebih tinggi dari tetangganya di kisi.
+                        Nomor lengkapnya ada di halaman detail. */}
+                    <span className="angka min-w-0 truncate font-mono text-xs text-tinta-3">
                       {p.pelanggan ? hpCantik(p.pelanggan.no_hp) : ""} ·{" "}
                       {tanggalPendek(p.created_at)}
                     </span>
