@@ -1,13 +1,44 @@
 import Link from "next/link";
-import FormAdmin from "@/components/forms/FormAdmin";
-import { gayaInput, gayaLabel } from "@/components/forms/gaya";
+import FormUsaha from "@/components/forms/FormUsaha";
 import { getProfil } from "@/lib/profil";
-import { simpanProfil } from "../actions";
+import { isiTemplate } from "@/lib/notifikasi";
 
 export const dynamic = "force-dynamic";
 
+type PesananContoh = { kode: string; pelanggan: { nama: string } | null };
+
 export default async function PengaturanUsaha() {
-  const { laundry } = await getProfil();
+  const { db, laundry } = await getProfil();
+
+  // Contoh pesannya dirakit dari bahan sungguhan: template "cucian siap" milik
+  // laundry ini dan order terakhir yang tercatat. Kalimat karangan akan
+  // memperlihatkan bentuk yang tidak pernah benar-benar dikirim.
+  const [{ data: templat }, { data: terakhir }] = await Promise.all([
+    db
+      .from("template_pesan")
+      .select("isi")
+      .eq("laundry_id", laundry.id)
+      .eq("jenis", "SIAP")
+      .maybeSingle(),
+    db
+      .from("pesanan")
+      .select("kode, pelanggan:pelanggan_id(nama)")
+      .eq("laundry_id", laundry.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const contohPesanan = terakhir as unknown as PesananContoh | null;
+
+  const contohPesan = isiTemplate(
+    templat?.isi ??
+      "Halo {nama}, cucian Anda ({kode}) sudah selesai dan siap diambil. Terima kasih.",
+    {
+      nama: contohPesanan?.pelanggan?.nama ?? "Ibu Sari",
+      kode: contohPesanan?.kode ?? "0108-01",
+    },
+  );
 
   return (
     <div className="px-4 md:px-0">
@@ -20,76 +51,19 @@ export default async function PengaturanUsaha() {
 
       <h1 className="mt-3 text-2xl font-bold tracking-tight">Profil usaha</h1>
       <p className="mt-1 text-sm leading-relaxed text-tinta-2">
-        Nama usaha tampil di layar aplikasi. Catatan nota ditempelkan di akhir
-        setiap pesan WhatsApp yang terkirim ke pelanggan.
+        Nama, alamat, dan telepon tampil di kepala setiap nota. Catatan nota
+        ikut di akhir tiap pesan WhatsApp.
       </p>
 
-      <div className="mt-7 border border-garis bg-white p-5">
-        <FormAdmin
-          aksi={simpanProfil}
-          saatMenunggu="Menyimpan..."
-          tombol="Simpan profil"
-        >
-          <div>
-            <label htmlFor="nama" className={gayaLabel}>
-              Nama usaha
-            </label>
-            <input
-              id="nama"
-              name="nama"
-              defaultValue={laundry.nama}
-              required
-              minLength={3}
-              className={gayaInput}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="alamat" className={gayaLabel}>
-              Alamat
-            </label>
-            <input
-              id="alamat"
-              name="alamat"
-              defaultValue={laundry.alamat ?? ""}
-              className={gayaInput}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="telp" className={gayaLabel}>
-              Nomor telepon
-            </label>
-            <input
-              id="telp"
-              name="telp"
-              type="tel"
-              inputMode="tel"
-              defaultValue={laundry.telp ?? ""}
-              className={`${gayaInput} angka font-mono`}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="footer_nota" className={gayaLabel}>
-              Catatan di bawah nota
-            </label>
-            <textarea
-              id="footer_nota"
-              name="footer_nota"
-              rows={3}
-              defaultValue={laundry.footer_nota ?? ""}
-              className={`${gayaInput} resize-y`}
-            />
-            <p className="mt-1.5 text-xs leading-relaxed text-tinta-3">
-              Ditempelkan di akhir setiap pesan WhatsApp, dipisah baris kosong.
-              Biasanya berisi batas waktu komplain atau jam buka. Contohnya bisa
-              dilihat di halaman Pesan WhatsApp.
-            </p>
-          </div>
-        </FormAdmin>
-      </div>
-
+      <FormUsaha
+        awal={{
+          nama: laundry.nama,
+          alamat: laundry.alamat ?? "",
+          telp: laundry.telp ?? "",
+          footer: laundry.footer_nota ?? "",
+        }}
+        contohPesan={contohPesan}
+      />
     </div>
   );
 }

@@ -57,7 +57,7 @@ export default async function DetailOrder({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { db } = await getProfil();
+  const { db, laundry } = await getProfil();
 
   const { data } = await db
     .from("pesanan")
@@ -207,6 +207,20 @@ export default async function DetailOrder({
             sobek di bawahnya — bentuk yang sama dengan ikon aplikasi. */}
         <section className="min-w-0 px-4 pt-5 md:px-6">
           <div className="relative border border-garis bg-white px-5 pt-5 shadow-[0_18px_40px_-32px_rgba(0,0,0,0.55)]">
+            {/* Kepala nota: nama usaha, alamat, telepon.
+                Ketiganya sudah lama tersimpan di profil usaha tapi tidak
+                pernah dibaca di mana pun — pemilik laundry mengisinya percaya
+                ada yang menampilkannya. Di nota kertas sungguhan, tiga baris
+                inilah yang paling atas, jadi di sinilah tempatnya. */}
+            <div className="mb-4 border-b border-dashed border-garis pb-3">
+              <p className="font-semibold leading-snug">{laundry.nama}</p>
+              {(laundry.alamat || laundry.telp) && (
+                <p className="angka mt-0.5 font-mono text-[11px] leading-relaxed text-tinta-2">
+                  {[laundry.alamat, laundry.telp].filter(Boolean).join(" · ")}
+                </p>
+              )}
+            </div>
+
             {batal && (
               <span className="absolute right-0 top-4 border border-tinta bg-kertas px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.22em]">
                 Dibatalkan
