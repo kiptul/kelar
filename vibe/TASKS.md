@@ -170,6 +170,32 @@ tidak juga langsung dikerjakan.
   lebar 375px — sekarang memuat nama layanan, garis titik-titik, harga,
   keterangan hitungan, dan tombol ± sekaligus. Itu baris terpadat di aplikasi.
 
+- **9 Agu 2026 — delapan halaman selesai diterapkan dari mockup.**
+  `/dashboard`, `/order/baru`, `/order/[id]`, `/rak`, `/pengaturan`, dan tiga
+  halaman pengaturan di bawahnya. Ditambah landing page `/` yang dibangun dari
+  nol. Semua live.
+
+  Enam sudah diperiksa di layar; **halaman 7 (`/pengaturan/pesan`) dan 8
+  (`/pengaturan/usaha`) belum** — panel Browser restart dan sesinya hilang.
+  Keduanya halaman terpanjang di aplikasi sekarang, jadi itu yang paling
+  layak dilihat lebih dulu.
+
+  Tiga penemuan berulang sepanjang pengerjaan, semuanya jenis yang sama —
+  kolom yang tersimpan tapi tidak pernah dibaca siapa pun, sementara
+  antarmukanya menjanjikan sebaliknya:
+
+  1. `laundry.footer_nota` — dijanjikan terkirim ke pelanggan lewat WhatsApp,
+     padahal tidak ada yang membacanya. Sekarang benar-benar ditempelkan di
+     akhir tiap pesan oleh `kirimNotifikasi`.
+  2. `laundry.alamat` dan `laundry.telp` — tidak pernah tampil di mana pun.
+     Sekarang jadi kepala nota di `/order/[id]`.
+  3. Warna amber di halaman rak — di luar delapan warna brief, masuk
+     diam-diam. Sudah diganti tinta.
+
+  Pelajarannya: kolom yang bisa diisi tapi tidak dibaca lebih berbahaya
+  daripada kolom yang tidak ada, karena pemiliknya bertindak seolah ia
+  bekerja. Layak diperiksa sekali lagi untuk kolom lain yang belum tersentuh.
+
 - **9 Agu 2026 — `NOMOR_ADMIN` masih kosong, dua tempat menunggunya.**
   `src/lib/kontak.ts`. Dipakai tombol "Tanya lewat WhatsApp" di halaman depan
   dan baris "hubungi admin" di `/pengaturan`. Keduanya sengaja tidak dirender
