@@ -44,7 +44,25 @@ export async function kirimNotifikasi(
     return { ok: false, alasan: `Template ${jenis} sedang dinonaktifkan.` };
   }
 
-  const isi = isiTemplate(templat.isi, { nama: target.nama, kode: target.kode });
+  // Catatan nota ditempelkan di akhir tiap pesan, dipisah baris kosong.
+  //
+  // Sebelumnya kolom itu tersimpan tapi tidak pernah dibaca siapa pun,
+  // sementara halaman pengaturannya menjanjikan isinya terkirim ke pelanggan.
+  // Pemilik laundry mengisi batas waktu komplain atau jam buka di sana dan
+  // percaya pelanggannya membacanya — padahal tidak ada yang membacanya.
+  const { data: usaha } = await db
+    .from("laundry")
+    .select("footer_nota")
+    .eq("id", target.laundryId)
+    .maybeSingle();
+
+  const badan = isiTemplate(templat.isi, {
+    nama: target.nama,
+    kode: target.kode,
+  });
+
+  const footer = usaha?.footer_nota?.trim();
+  const isi = footer ? `${badan}\n\n${footer}` : badan;
 
   // Klaim slot kirim dulu, baru kirim. Urutannya sengaja begini: kalau dua
   // proses jalan bersamaan, yang kalah klaim langsung berhenti dan pelanggan

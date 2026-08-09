@@ -126,6 +126,7 @@ export default async function PengaturanPesan() {
           keterangan={KETERANGAN}
           urutan={URUTAN}
           contoh={contoh}
+          footer={laundry.footer_nota?.trim() || null}
         />
       ) : (
         <div className="mt-6 border border-dashed border-garis bg-white px-5 py-7 text-center">

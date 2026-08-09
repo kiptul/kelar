@@ -31,6 +31,7 @@ export default function FormPesan({
   keterangan,
   urutan,
   contoh,
+  footer,
 }: {
   awal: TemplateAwal[];
   keterangan: Keterangan;
@@ -38,6 +39,10 @@ export default function FormPesan({
   // Nama dan kode order sungguhan dari order terakhir, supaya contoh hasil
   // jadinya terbaca seperti pesan yang benar-benar akan terkirim.
   contoh: { nama: string; kode: string };
+  // Catatan nota yang ditempelkan kirimNotifikasi di akhir tiap pesan. Ikut
+  // ditampilkan di pratinjau: contoh yang tidak memuatnya akan menjanjikan
+  // bentuk yang berbeda dari yang benar-benar sampai ke pelanggan.
+  footer: string | null;
 }) {
   const [hasil, aksi] = useActionState(simpanTemplate, null);
   const [baris, setBaris] = useState<Baris[]>(() =>
@@ -178,7 +183,9 @@ export default function FormPesan({
                   </div>
                   <div className="mt-2 border border-aksen bg-aksen-muda px-3 py-2.5">
                     <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {isiTemplate(b.isi, contoh)}
+                      {footer
+                        ? `${isiTemplate(b.isi, contoh)}\n\n${footer}`
+                        : isiTemplate(b.isi, contoh)}
                     </p>
                   </div>
                 </div>

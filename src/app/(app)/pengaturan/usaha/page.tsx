@@ -20,8 +20,8 @@ export default async function PengaturanUsaha() {
 
       <h1 className="mt-3 text-2xl font-bold tracking-tight">Profil usaha</h1>
       <p className="mt-1 text-sm leading-relaxed text-tinta-2">
-        Nama usaha tampil di layar aplikasi. Catatan nota ikut terkirim ke
-        pelanggan lewat WhatsApp.
+        Nama usaha tampil di layar aplikasi. Catatan nota ditempelkan di akhir
+        setiap pesan WhatsApp yang terkirim ke pelanggan.
       </p>
 
       <div className="mt-7 border border-garis bg-white p-5">
@@ -82,22 +82,14 @@ export default async function PengaturanUsaha() {
               className={`${gayaInput} resize-y`}
             />
             <p className="mt-1.5 text-xs leading-relaxed text-tinta-3">
-              Dibaca pelanggan. Biasanya berisi batas waktu komplain atau jam
-              buka.
+              Ditempelkan di akhir setiap pesan WhatsApp, dipisah baris kosong.
+              Biasanya berisi batas waktu komplain atau jam buka. Contohnya bisa
+              dilihat di halaman Pesan WhatsApp.
             </p>
           </div>
         </FormAdmin>
       </div>
 
-      <div className="mt-8 border border-garis bg-white p-5">
-        <h2 className="font-mono text-[11px] uppercase tracking-wider text-tinta-2">
-          Ganti password
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-tinta-2">
-          Password diatur oleh pengelola Kelar. Hubungi admin untuk
-          menggantinya.
-        </p>
-      </div>
     </div>
   );
 }
