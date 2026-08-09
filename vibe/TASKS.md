@@ -123,7 +123,33 @@ tidak juga langsung dikerjakan.
   yang jadi satu-satunya pintu pendaftaran — **belum pernah teruji sama sekali**.
   Uji menyeluruh begitu akun superadmin-nya ada.
 
-- **9 Agu 2026 — lima halaman diterapkan dari mockup, nol yang pernah dilihat.**
+- **9 Agu 2026 — lima halaman sudah diperiksa di layar. Empat cacat ketemu.**
+  Diperiksa di produksi pada lebar 375px dengan sesi laundry sungguhan.
+  Keempatnya lolos typecheck, lint, dan build sejak awal — tidak satu pun bisa
+  ditemukan tanpa membuka halamannya.
+
+  1. **Dashboard, kartu bergerigi.** Nomor HP pecah dua sampai tiga baris pada
+     kartu yang membawa penanda "Belum bayar"; kartunya jadi 113px sementara
+     tetangganya 98px. Diperbaiki dengan truncate. Terverifikasi: 25 kartu
+     seragam 98px.
+  2. **Order baru, ketukan hilang.** Dua ketukan cepat pada tombol + cuma
+     menambah setengah kilo, karena keduanya membaca `qty` dari closure yang
+     sama sebelum render pertama selesai. Diganti bentuk fungsional.
+     Terverifikasi: dua ketukan → 1, tiga ketukan berikutnya → 2,5.
+  3. **Rupiah jadi "RP7.000"** di baris rincian nota, di `/order/baru` dan
+     `/order/[id]`. Kelas `uppercase` ikut mengapitalkan singkatan mata uang.
+  4. **Judul `/pengaturan` menempel garis header**, nol piksel.
+
+  Sisa yang tidak diperbaiki karena kosmetik: label "Perangkat tidak melapor"
+  di `/rak` pecah dua baris pada 375px.
+
+  Catatan cara kerja, supaya tidak terulang: **klik lewat alat otomasi tidak
+  sampai ke halaman** pada lingkungan ini, sedangkan `element.click()` lewat
+  JS sampai. Sempat membuat cacat nomor 2 terbaca seolah tombolnya mati.
+  Kalau interaksi tampak tidak berfungsi, uji dulu lewat JS sebelum menuduh
+  kodenya.
+
+- **~~9 Agu 2026 — lima halaman diterapkan dari mockup, nol yang pernah dilihat.~~**
   `/dashboard`, `/order/baru`, `/order/[id]`, `/rak`, dan `/pengaturan` ditulis
   ulang mengikuti mockup Claude Design, lalu di-deploy. Semuanya lolos
   typecheck, lint, dan build, dan rutenya sehat di produksi — tapi tidak satu
