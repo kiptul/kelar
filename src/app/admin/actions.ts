@@ -3,38 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { pastikanSuperAdmin } from "@/lib/admin";
 import { normalisasiHp } from "@/lib/format";
+import { TEMPLATE_AWAL } from "@/lib/template-awal";
 
 export type Hasil = { error?: string; pesan?: string } | null;
 
-const TEMPLATE_AWAL = [
-  {
-    jenis: "SIAP",
-    isi: "Halo {nama}, cucian Anda ({kode}) sudah selesai dan siap diambil. Terima kasih.",
-  },
-  {
-    jenis: "REMINDER_H1",
-    isi: "Halo {nama}, cucian Anda ({kode}) sudah siap sejak kemarin. Kami tunggu ya.",
-  },
-  {
-    jenis: "REMINDER_H3",
-    isi: "Halo {nama}, cucian Anda ({kode}) masih kami simpan. Silakan diambil kapan saja.",
-  },
-  {
-    jenis: "REMINDER_H7",
-    isi: "Halo {nama}, cucian Anda ({kode}) sudah seminggu siap diambil. Mohon dikonfirmasi ya.",
-  },
-  {
-    jenis: "TERIMA_KASIH",
-    isi: "Terima kasih {nama} sudah menggunakan layanan kami. Sampai jumpa lagi!",
-  },
-  // Dipakai tombol di halaman rak untuk cucian yang menginap. Jenisnya
-  // sengaja terpisah dari REMINDER_* supaya tidak berebut baris
-  // notifikasi_log dengan pengingat terjadwal — lihat database/pengingat_rak.sql.
-  {
-    jenis: "PENGINGAT_RAK",
-    isi: "Halo {nama}, cucian Anda ({kode}) sudah selesai dan masih kami simpan di rak. Silakan diambil ya.",
-  },
-];
 
 // Harganya sengaja 0. Pemilik laundry wajib mengisinya sendiri, dan angka nol
 // di layar jauh lebih jelas menuntut perhatian daripada harga karangan yang

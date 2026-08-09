@@ -1,15 +1,17 @@
 import Link from "next/link";
-import FormAdmin from "@/components/forms/FormAdmin";
-import { gayaInput, gayaLabel } from "@/components/forms/gaya";
+import FormPesan, {
+  type Keterangan,
+  type TemplateAwal,
+} from "@/components/forms/FormPesan";
+import TombolTemplateBawaan from "@/components/forms/TombolTemplateBawaan";
 import { getProfil } from "@/lib/profil";
 import type { JenisNotifikasi } from "@/lib/types";
-import { simpanTemplate } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 // Menjelaskan kapan tiap pesan terkirim. Tanpa ini, "REMINDER_H3" tidak berarti
 // apa-apa bagi orang yang cuma ingin mengubah kalimatnya.
-const KETERANGAN: Record<JenisNotifikasi, { judul: string; kapan: string }> = {
+const KETERANGAN: Keterangan = {
   SIAP: {
     judul: "Cucian siap",
     kapan: "Terkirim begitu status diubah jadi SIAP",
@@ -45,25 +47,35 @@ const URUTAN: JenisNotifikasi[] = [
   "PENGINGAT_RAK",
 ];
 
-type Template = {
-  id: string;
-  jenis: JenisNotifikasi;
-  isi: string;
-  aktif: boolean;
-};
+type PesananContoh = { kode: string; pelanggan: { nama: string } | null };
 
 export default async function PengaturanPesan() {
   const { db, laundry } = await getProfil();
 
-  const { data } = await db
-    .from("template_pesan")
-    .select("id, jenis, isi, aktif")
-    .eq("laundry_id", laundry.id);
+  const [{ data }, { data: terakhir }] = await Promise.all([
+    db
+      .from("template_pesan")
+      .select("id, jenis, isi, aktif")
+      .eq("laundry_id", laundry.id),
+    // Contoh hasil jadi memakai order terakhir yang tercatat, bukan nama
+    // karangan. Pemilik laundry menilai kalimatnya dengan membayangkan
+    // pelanggannya sendiri — nama asing membuat penilaian itu meleset.
+    db
+      .from("pesanan")
+      .select("kode, pelanggan:pelanggan_id(nama)")
+      .eq("laundry_id", laundry.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
-  const template = (data ?? []) as Template[];
-  const urut = URUTAN.map((j) => template.find((t) => t.jenis === j)).filter(
-    (t): t is Template => Boolean(t)
-  );
+  const template = (data ?? []) as TemplateAwal[];
+  const contohPesanan = terakhir as unknown as PesananContoh | null;
+
+  const contoh = {
+    nama: contohPesanan?.pelanggan?.nama ?? "Ibu Sari",
+    kode: contohPesanan?.kode ?? "0108-01",
+  };
 
   return (
     <div className="px-4 md:px-0">
@@ -80,66 +92,55 @@ export default async function PengaturanPesan() {
         laundry Anda sendiri.
       </p>
 
-      <div className="mt-5 border border-garis bg-white px-4 py-3.5">
-        <p className="font-mono text-[10px] uppercase tracking-wider text-tinta-3">
+      <div className="mt-5 border border-garis bg-white p-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-tinta-3">
           Dua kata kunci
         </p>
-        <p className="mt-1.5 text-sm leading-relaxed text-tinta-2">
-          <code className="font-mono text-tinta">{"{nama}"}</code> diganti nama
-          pelanggan, <code className="font-mono text-tinta">{"{kode}"}</code>{" "}
-          diganti kode order. Tulis persis begitu, lengkap dengan kurung
-          kurawalnya.
+        <dl className="mt-2.5 space-y-2">
+          <div className="flex items-baseline gap-2.5">
+            <dt className="shrink-0 font-mono text-sm font-semibold text-aksen">
+              {"{nama}"}
+            </dt>
+            <dd className="text-sm leading-relaxed text-tinta-2">
+              diganti nama pelanggan
+            </dd>
+          </div>
+          <div className="flex items-baseline gap-2.5">
+            <dt className="shrink-0 font-mono text-sm font-semibold text-aksen">
+              {"{kode}"}
+            </dt>
+            <dd className="text-sm leading-relaxed text-tinta-2">
+              diganti kode order
+            </dd>
+          </div>
+        </dl>
+        <p className="mt-3 border-t border-garis pt-3 text-xs leading-relaxed text-tinta-3">
+          Tulis lengkap dengan kurung kurawalnya. Setiap pesan wajib memuat{" "}
+          {"{nama}"}; {"{kode}"} boleh dipakai atau tidak.
         </p>
       </div>
 
-      <section className="mt-7">
-        {!urut.length ? (
-          <p className="py-6 text-sm leading-relaxed text-tinta-3">
-            Belum ada template. Hubungi admin — laundry ini dibuat tanpa template
-            bawaan, dan tanpanya tidak ada pesan yang bisa terkirim.
+      {template.length ? (
+        <FormPesan
+          awal={template}
+          keterangan={KETERANGAN}
+          urutan={URUTAN}
+          contoh={contoh}
+        />
+      ) : (
+        <div className="mt-6 border border-dashed border-garis bg-white px-5 py-7 text-center">
+          <span
+            className="mx-auto mb-4 block h-px w-7 bg-aksen"
+            aria-hidden="true"
+          />
+          <p className="text-base font-semibold">Belum ada template</p>
+          <p className="mt-2 text-sm leading-relaxed text-tinta-2">
+            Tidak ada pesan otomatis yang terkirim ke pelanggan. Pasang template
+            bawaan dulu, lalu ubah kalimatnya sesuai gaya bicara laundry Anda.
           </p>
-        ) : (
-          <FormAdmin
-            aksi={simpanTemplate}
-            saatMenunggu="Menyimpan..."
-            tombol="Simpan pesan"
-          >
-            <div className="space-y-4">
-              {urut.map((t) => (
-                <div key={t.id} className="border border-garis bg-white p-4">
-                  <input type="hidden" name="id" value={t.id} />
-
-                  <label htmlFor={`isi-${t.id}`} className={gayaLabel}>
-                    {KETERANGAN[t.jenis].judul}
-                  </label>
-                  <p className="mb-2 text-xs leading-relaxed text-tinta-3">
-                    {KETERANGAN[t.jenis].kapan}
-                  </p>
-                  <textarea
-                    id={`isi-${t.id}`}
-                    name={`isi-${t.id}`}
-                    rows={3}
-                    defaultValue={t.isi}
-                    required
-                    minLength={10}
-                    className={`${gayaInput} resize-y`}
-                  />
-
-                  <label className="mt-3 flex items-center gap-2.5 text-sm">
-                    <input
-                      type="checkbox"
-                      name={`aktif-${t.id}`}
-                      defaultChecked={t.aktif}
-                      className="h-4 w-4 accent-aksen"
-                    />
-                    Kirim pesan ini
-                  </label>
-                </div>
-              ))}
-            </div>
-          </FormAdmin>
-        )}
-      </section>
+          <TombolTemplateBawaan />
+        </div>
+      )}
     </div>
   );
 }
