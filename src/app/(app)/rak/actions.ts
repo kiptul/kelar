@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getProfil } from "@/lib/profil";
+import { kirimNotifikasi, type HasilNotifikasi } from "@/lib/notifikasi";
 import type { Hasil } from "@/app/admin/actions";
 
 // Bentuk kode slot dikunci sama dengan yang diterima api/rak. Kalau di sini
@@ -146,6 +147,73 @@ export async function batalGantiWifi() {
     .eq("laundry_id", laundry.id);
 
   revalidatePath("/rak");
+}
+
+type SlotBerpenghuni = {
+  pesanan: {
+    id: string;
+    kode: string;
+    status: string;
+    pelanggan: { nama: string; no_hp: string } | null;
+  } | null;
+};
+
+// Kirim pengingat untuk cucian yang menginap di rak.
+//
+// Jenisnya PENGINGAT_RAK, bukan menumpang REMINDER_H1/H3/H7. notifikasi_log
+// dipagari unique (pesanan_id, jenis): kalau tombol ini menumpang jenis yang
+// sama dengan cron, siapa pun yang duluan memblokir yang lain — tekan hari
+// ini, pengingat terjadwal besok tidak pernah terkirim, tanpa galat apa pun.
+export async function kirimPengingatRak(
+  _prev: HasilNotifikasi | null,
+  formData: FormData,
+): Promise<HasilNotifikasi> {
+  const kode = String(formData.get("kode") ?? "").trim();
+  if (!kode) return { ok: false, alasan: "Slot tidak dikenali." };
+
+  const { db, laundry } = await getProfil();
+
+  const { data } = await db
+    .from("rak_slot")
+    .select(
+      "pesanan:pesanan_id(id, kode, status, pelanggan:pelanggan_id(nama, no_hp))",
+    )
+    .eq("laundry_id", laundry.id)
+    .eq("kode", kode)
+    .maybeSingle();
+
+  const pesanan = (data as unknown as SlotBerpenghuni | null)?.pesanan;
+
+  if (!pesanan) {
+    return { ok: false, alasan: "Slot ini belum tertaut ke order mana pun." };
+  }
+  if (!pesanan.pelanggan) {
+    return { ok: false, alasan: "Order ini tidak punya data pelanggan." };
+  }
+  // Order yang sudah diambil atau dibatalkan tidak menunggu siapa pun.
+  // Mengirimi pengingat untuk cucian yang sudah pulang membuat pelanggan
+  // datang percuma.
+  if (pesanan.status === "DIAMBIL" || pesanan.status === "BATAL") {
+    return {
+      ok: false,
+      alasan: `Order ${pesanan.kode} sudah ${pesanan.status.toLowerCase()}.`,
+    };
+  }
+
+  const hasil = await kirimNotifikasi(
+    db,
+    {
+      pesananId: pesanan.id,
+      laundryId: laundry.id,
+      kode: pesanan.kode,
+      nama: pesanan.pelanggan.nama,
+      noHp: pesanan.pelanggan.no_hp,
+    },
+    "PENGINGAT_RAK",
+  );
+
+  revalidatePath("/rak");
+  return hasil;
 }
 
 export async function hapusSlot(formData: FormData) {

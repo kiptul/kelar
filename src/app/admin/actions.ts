@@ -27,6 +27,13 @@ const TEMPLATE_AWAL = [
     jenis: "TERIMA_KASIH",
     isi: "Terima kasih {nama} sudah menggunakan layanan kami. Sampai jumpa lagi!",
   },
+  // Dipakai tombol di halaman rak untuk cucian yang menginap. Jenisnya
+  // sengaja terpisah dari REMINDER_* supaya tidak berebut baris
+  // notifikasi_log dengan pengingat terjadwal — lihat database/pengingat_rak.sql.
+  {
+    jenis: "PENGINGAT_RAK",
+    isi: "Halo {nama}, cucian Anda ({kode}) sudah selesai dan masih kami simpan di rak. Silakan diambil ya.",
+  },
 ];
 
 // Harganya sengaja 0. Pemilik laundry wajib mengisinya sendiri, dan angka nol

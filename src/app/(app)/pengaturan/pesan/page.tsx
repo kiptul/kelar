@@ -30,6 +30,10 @@ const KETERANGAN: Record<JenisNotifikasi, { judul: string; kapan: string }> = {
     judul: "Terima kasih",
     kapan: "Terkirim begitu status diubah jadi DIAMBIL",
   },
+  PENGINGAT_RAK: {
+    judul: "Pengingat dari rak",
+    kapan: "Dikirim manual dari halaman rak, untuk cucian yang menginap",
+  },
 };
 
 const URUTAN: JenisNotifikasi[] = [
@@ -38,6 +42,7 @@ const URUTAN: JenisNotifikasi[] = [
   "REMINDER_H3",
   "REMINDER_H7",
   "TERIMA_KASIH",
+  "PENGINGAT_RAK",
 ];
 
 type Template = {

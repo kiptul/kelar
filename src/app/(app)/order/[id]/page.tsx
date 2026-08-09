@@ -48,6 +48,7 @@ const TEKS_NOTIF: Record<JenisNotifikasi, string> = {
   REMINDER_H3: "Pengingat H+3",
   REMINDER_H7: "Pengingat H+7",
   TERIMA_KASIH: "Pesan terima kasih",
+  PENGINGAT_RAK: "Pengingat dari rak",
 };
 
 export default async function DetailOrder({

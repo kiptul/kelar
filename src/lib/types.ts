@@ -9,7 +9,8 @@ export type JenisNotifikasi =
   | "REMINDER_H1"
   | "REMINDER_H3"
   | "REMINDER_H7"
-  | "TERIMA_KASIH";
+  | "TERIMA_KASIH"
+  | "PENGINGAT_RAK";
 export type StatusKirim = "PENDING" | "TERKIRIM" | "GAGAL";
 
 export interface Laundry {

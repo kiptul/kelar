@@ -5,6 +5,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { lamaSejak } from "@/lib/format";
 import TautkanSlot from "@/components/ui/TautkanSlot";
+import TombolPengingatRak from "@/components/ui/TombolPengingatRak";
 import { lepasSlot } from "@/app/(app)/rak/actions";
 
 export type Slot = {
@@ -283,6 +284,8 @@ export default function StatusRak({
                           : "lama"}{" "}
                         di rak. Hubungi pelanggannya supaya raknya lekas kosong.
                       </p>
+
+                      {mengendap && <TombolPengingatRak kode={s.kode} />}
 
                       <form action={lepasSlot} className="mt-3">
                         <input type="hidden" name="kode" value={s.kode} />
