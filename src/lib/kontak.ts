@@ -8,4 +8,4 @@
 // "hubungi admin" tanpa nomor cuma saran yang tidak bisa diikuti.
 //
 // Format 62..., tanpa tanda baca. Tampilannya diurus hpCantik().
-export const NOMOR_ADMIN = "";
+export const NOMOR_ADMIN = "6282318021556";
