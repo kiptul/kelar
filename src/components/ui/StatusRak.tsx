@@ -33,14 +33,35 @@ function jamSejak(ts: string | null, sekarang: number): number {
   return ts ? (sekarang - new Date(ts).getTime()) / 3_600_000 : 0;
 }
 
+// Slot bisa didaftarkan di aplikasi tanpa sensornya terpasang. Slot begitu
+// tidak pernah ikut dilaporkan papan, jadi terakhir_update-nya berhenti di
+// waktu pembuatan sementara slot bersensor bergerak bersama tiap kabar.
+//
+// Ditebak dari selisih itu, bukan dari kolom baru: kalau nanti sensornya
+// benar-benar dipasang dan firmware diperbarui, penandanya hilang sendiri
+// tanpa ada yang perlu mencentang apa pun.
+const TOLERANSI_LAPOR_MS = 5 * 60_000;
+
+function bersensor(s: Slot, kontak: string | null): boolean {
+  if (!kontak) return false;
+  const selisih = Math.abs(
+    new Date(s.terakhir_update).getTime() - new Date(kontak).getTime(),
+  );
+  return selisih < TOLERANSI_LAPOR_MS;
+}
+
 export default function StatusRak({
   awal,
   sekarang: sekarangAwal,
   orderAktif,
+  kontakPerangkat,
 }: {
   awal: Slot[];
   sekarang: number;
   orderAktif: OrderAktif[];
+  // Kabar terakhir dari papan. Dipakai menebak slot mana yang sebenarnya
+  // punya sensor — lihat bersensor() di bawah.
+  kontakPerangkat: string | null;
 }) {
   const [slots, setSlots] = useState<Slot[]>(awal);
 
@@ -109,6 +130,7 @@ export default function StatusRak({
   }, []);
 
   const terisi = slots.filter((s) => s.terisi).length;
+  const tanpaSensor = slots.filter((s) => !bersensor(s, kontakPerangkat)).length;
 
   // Kode slot berbentuk huruf-lalu-angka (A1, B12), jadi hurufnya sekaligus
   // menandai rak mana. Tidak perlu kolom terpisah di database untuk itu.
@@ -141,6 +163,7 @@ export default function StatusRak({
           </h2>
           <span className="angka font-mono text-[11px] text-tinta-3">
             {terisi} dari {slots.length} terisi
+            {tanpaSensor > 0 && ` · ${tanpaSensor} belum bersensor`}
           </span>
         </div>
 
@@ -168,6 +191,11 @@ export default function StatusRak({
                   const lama = jamSejak(s.terisi_sejak, sekarang);
                   const mengendap = s.terisi && lama >= AMBANG_MENGENDAP_JAM;
                   const tanpaOrder = s.terisi && !s.pesanan;
+                  // Slot yang sensornya belum terpasang tidak pernah dilapori
+                  // papan, jadi ia akan tampil "Kosong" selamanya walaupun
+                  // raknya penuh. Dibedakan supaya kasir tahu layarnya memang
+                  // belum tahu, bukan raknya yang kebetulan kosong.
+                  const belumBersensor = !bersensor(s, kontakPerangkat);
                   // Dua-duanya perlu tindakan, jadi dua-duanya ditandai sama:
                   // tinta tegas, bukan warna baru. Slot yang cuma "terisi dan
                   // beres" tidak perlu berteriak.
@@ -177,7 +205,9 @@ export default function StatusRak({
                     <li
                       key={s.kode}
                       className={`border border-l-[3px] px-2.5 py-2.5 transition-colors duration-300 ${
-                        !s.terisi
+                        belumBersensor
+                          ? "border-dashed border-garis border-l-garis bg-kertas-terang"
+                          : !s.terisi
                           ? "border-garis border-l-garis bg-kertas-terang"
                           : perlu
                             ? "border-tinta border-l-tinta bg-white"
@@ -188,7 +218,7 @@ export default function StatusRak({
                         <span
                           aria-hidden="true"
                           className={`h-2 w-2 shrink-0 rounded-full border ${
-                            !s.terisi
+                            belumBersensor || !s.terisi
                               ? "border-tinta-3"
                               : perlu
                                 ? "border-tinta bg-tinta"
@@ -209,7 +239,7 @@ export default function StatusRak({
                               : "text-aksen"
                         }`}
                       >
-                        {s.terisi ? "Terisi" : "Kosong"}
+                        {belumBersensor ? "—" : s.terisi ? "Terisi" : "Kosong"}
                       </p>
 
                       {/* Kode order jauh lebih berguna daripada kata "Terisi" —
@@ -228,7 +258,9 @@ export default function StatusRak({
                           mengendap ? "font-semibold text-tinta" : "text-tinta-3"
                         }`}
                       >
-                        {!s.terisi
+                        {belumBersensor
+                          ? "Belum bersensor"
+                          : !s.terisi
                           ? "Siap dipakai"
                           : s.terisi_sejak
                             ? mengendap

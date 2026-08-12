@@ -131,6 +131,7 @@ export default async function HalamanRak() {
             awal={slots}
             sekarang={sekarangMs()}
             orderAktif={orderAktif}
+            kontakPerangkat={perangkat?.terakhir_kontak ?? null}
           />
           <KelolaSlot
             slots={slots.map((s) => ({ kode: s.kode, terisi: s.terisi }))}
