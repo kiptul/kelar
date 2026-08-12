@@ -175,10 +175,10 @@ tidak juga langsung dikerjakan.
   halaman pengaturan di bawahnya. Ditambah landing page `/` yang dibangun dari
   nol. Semua live.
 
-  Enam sudah diperiksa di layar; **halaman 7 (`/pengaturan/pesan`) dan 8
-  (`/pengaturan/usaha`) belum** — panel Browser restart dan sesinya hilang.
-  Keduanya halaman terpanjang di aplikasi sekarang, jadi itu yang paling
-  layak dilihat lebih dulu.
+  **Kedelapan sudah diperiksa di layar.** Halaman 7 dan 8 menyusul belakangan
+  setelah beberapa kali gagal karena panel Browser restart; keduanya bersih —
+  tanpa luapan horizontal di 375px, enam kartu template lengkap dengan
+  gelembung contoh, dan cuplikan kepala aplikasi maupun kepala nota hadir.
 
   Tiga penemuan berulang sepanjang pengerjaan, semuanya jenis yang sama —
   kolom yang tersimpan tapi tidak pernah dibaca siapa pun, sementara
@@ -196,31 +196,40 @@ tidak juga langsung dikerjakan.
   daripada kolom yang tidak ada, karena pemiliknya bertindak seolah ia
   bekerja. Layak diperiksa sekali lagi untuk kolom lain yang belum tersentuh.
 
-- **9 Agu 2026 — `NOMOR_ADMIN` masih kosong, dua tempat menunggunya.**
-  `src/lib/kontak.ts`. Dipakai tombol "Tanya lewat WhatsApp" di halaman depan
-  dan baris "hubungi admin" di `/pengaturan`. Keduanya sengaja tidak dirender
-  selama kosong, jadi tidak ada yang rusak — tapi halaman depan jadi tidak
-  punya ajakan bertindak sama sekali, dan "hubungi admin" jadi saran tanpa
-  ujung. Isi dengan format `62...`.
+- [x] **9 Agu 2026 — `NOMOR_ADMIN` terisi.** `src/lib/kontak.ts`. Tombol
+  "Tanya lewat WhatsApp" di beranda dan baris "hubungi admin" di
+  `/pengaturan` sekarang hidup.
 
-- **9 Agu 2026 — `database/pengingat_rak.sql` belum dijalankan.**
-  Dua langkah terpisah, `alter type` dulu sendirian baru sisanya; PostgreSQL
-  melarang nilai enum dipakai di transaksi yang sama dengan yang
-  menambahkannya. Sampai dijalankan, tombol pengingat di `/rak` membalas
-  "Template belum dibuat" — jelas, tapi tidak berfungsi.
+- [x] **9 Agu 2026 — `pengingat_rak.sql` selesai.** Langkah 1 (enum)
+  dijalankan manual; langkah 2 (semai template) ternyata terlewat dan
+  disisipkan lewat PostgREST. Catatan: **ada tiga laundry** di database, dan
+  SQL-nya memang menyemai untuk semuanya — ketiganya sudah punya template
+  PENGINGAT_RAK.
 
-- **9 Agu 2026 — token Fonnte perangkat `abok` masih hidup di GitHub.**
-  `.env.example` di `origin/main` pernah memuat token asli
-  `e42gsCzZ259tDvBgRde4`. Berkasnya sudah bersih, tapi nilainya tetap ada di
-  riwayat git dan repo ini publik. Diperiksa lewat API Fonnte: token itu
-  **masih sah**, milik perangkat bernama `abok` (62895321199348), kuota 1000,
-  berlaku sampai 31 Agustus 2026. WhatsApp-nya kebetulan sedang `disconnect`,
-  jadi belum bisa dipakai mengirim — tapi begitu perangkat itu discan, siapa
-  pun yang membaca riwayat git bisa mengirim atas nama nomor itu.
+- [x] **9 Agu 2026 — token Fonnte `abok` sudah dicabut.** Diperiksa ulang ke
+  API Fonnte: `{"reason":"token invalid","status":false}`. Nilainya masih ada
+  di riwayat git repo publik, tapi sudah tidak berguna. Riwayatnya tidak perlu
+  ditulis ulang.
 
-  Bukan token yang dipakai aplikasi sekarang (itu sudah beda). Yang perlu:
-  hapus perangkat `abok` atau reset tokennya di dashboard Fonnte. Menulis
-  ulang riwayat git tidak perlu — begitu tokennya mati, yang tersisa cuma teks.
+- **9 Agu 2026 — 20 slot terdaftar, sensornya baru tiga.**
+  Rak A sampai D, masing-masing lima slot. Didaftarkan untuk keperluan demo;
+  A1, A2, A3 yang punya sensor.
+
+  Tujuh belas sisanya ditandai "Belum bersensor" di layar — kotak bergaris
+  putus-putus, status "—". Tanpa penanda itu mereka akan tampil "Kosong ·
+  Siap dipakai" selamanya walaupun raknya penuh, dan layar yang berbohong
+  lebih buruk daripada slot yang tidak ada.
+
+  Penandanya ditebak dari selisih `terakhir_update` dengan `terakhir_kontak`,
+  bukan kolom baru: slot bersensor bergerak bersama tiap kabar papan, yang
+  tidak berhenti di waktu pembuatannya. Begitu sensornya dipasang dan firmware
+  diperbarui, penandanya hilang sendiri.
+
+  Yang dibutuhkan untuk membuatnya nyata: **satu ESP8266 tidak bisa menampung
+  20 sensor.** NodeMCU hanya punya sekitar lima GPIO aman setelah D0, D3, D4,
+  dan D8 dikecualikan. Perlu port expander MCP23017 (16 input per chip lewat
+  dua kabel I2C — dua chip cukup untuk 32) atau multiplexer CD74HC4067.
+  Firmware, wiring, dan `perangkat/README.md` ikut berubah.
 
 - **9 Agu 2026 — multi-laundry masih terkunci di dua tempat.**
   Aplikasinya melayani banyak laundry, tapi `api/rak` membaca `DEVICE_TOKEN`
